@@ -5,7 +5,8 @@ st.title("Flux video live folosind HTML și JavaScript - Camera din spate")
 
 # Cod HTML și JavaScript pentru accesarea camerei și afișarea fluxului video
 html_code = """
-    <html lang="en">
+    <!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,10 +40,6 @@ html_code = """
     #capture-btn:hover {
       background-color: #45a049;
     }
-    #captured-image {
-      display: none;
-      margin-top: 20px;
-    }
   </style>
 </head>
 <body>
@@ -50,13 +47,11 @@ html_code = """
   <video id="camera" autoplay playsinline></video>
   <button id="capture-btn">Capture</button>
   <canvas id="canvas"></canvas>
-  <img id="captured-image" alt="Captured Image" />
 
   <script>
     const video = document.getElementById('camera');
     const canvas = document.getElementById('canvas');
     const captureBtn = document.getElementById('capture-btn');
-    const capturedImage = document.getElementById('captured-image');
 
     // Accesarea camerei pentru telefoane mobile
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
@@ -67,21 +62,36 @@ html_code = """
         console.error("Error accessing camera: ", err);
       });
 
-    // Capturarea imaginii și afișarea acesteia pe pagină
+    // Capturarea imaginii și trimiterea acesteia către server
     captureBtn.addEventListener('click', () => {
       const context = canvas.getContext('2d');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Convertim imaginea în format Data URL și o afișăm pe pagină
-      const imageDataURL = canvas.toDataURL('image/png');
-      capturedImage.src = imageDataURL;
-      capturedImage.style.display = 'block'; // Afișăm imaginea capturată
+      // Convertim imaginea într-un Blob și trimitem către server
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append('photo', blob, 'photo.png');
+
+        // Trimiterea imaginii folosind Fetch API către pagina "test.com"
+        fetch('https://localhost:8000/upload', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+          console.log('Success:', data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+      }, 'image/png');
     });
   </script>
 </body>
 </html>
+
 """
 
 # Integrarea codului HTML și JavaScript în Streamlit

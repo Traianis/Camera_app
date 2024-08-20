@@ -5,86 +5,83 @@ st.title("Flux video live folosind HTML și JavaScript - Camera din spate")
 
 # Cod HTML și JavaScript pentru accesarea camerei și afișarea fluxului video
 html_code = """
-    <div style="text-align: center;">
-    <video id="video" width="100%" height="auto" autoplay style="border: 1px solid black;"></video>
-    <br>
-    <button id="capture">Capturează imagine</button>
-    <canvas id="canvas" style="display:none;"></canvas>
-    <img id="captured-image" style="display:none;" alt="Captured Image"/>
-    <p id="permission-message" style="color: red; display: none;"></p> <!-- Afișare mesaj de permisiune -->
-    <p id="instructions" style="color: blue; display: none;">
-        Vă rugăm să accesați setările browserului pentru a permite accesul la cameră:
-        <br>
-        1. Apăsați pe iconița camerei din bara de adrese a browserului.
-        <br>
-        2. Selectați "Permiteți întotdeauna".
-        <br>
-        3. Reîncărcați pagina după ce ați schimbat permisiunile.
-    </p>
-    </div>
-
-    <script>
-    var video = document.getElementById('video');
-    var canvas = document.getElementById('canvas');
-    var context = canvas.getContext('2d');
-    var capturedImage = document.getElementById('captured-image');
-    var permissionMessage = document.getElementById('permission-message');
-    var instructions = document.getElementById('instructions');
-
-    // Verificăm permisiunile înainte de a cere acces la cameră
-    navigator.permissions.query({ name: 'camera' }).then(function(permissionStatus) {
-        if (permissionStatus.state === 'denied') {
-            // Dacă permisiunea a fost refuzată
-            permissionMessage.innerText = "Permisiunea de a accesa camera a fost refuzată.";
-            permissionMessage.style.display = 'block';
-            instructions.style.display = 'block'; // Afișăm instrucțiunile pentru a permite camera manual
-        } else {
-            // Dacă permisiunea este acordată sau urmează să fie solicitată
-            startCamera();
-        }
-
-        // Ascultăm la schimbarea stării permisiunii
-        permissionStatus.onchange = function() {
-            if (permissionStatus.state === 'granted') {
-                permissionMessage.style.display = 'none';
-                instructions.style.display = 'none';
-                startCamera();
-            } else if (permissionStatus.state === 'denied') {
-                permissionMessage.innerText = "Permisiunea de a accesa camera a fost refuzată.";
-                permissionMessage.style.display = 'block';
-                instructions.style.display = 'block';
-            }
-        };
-    });
-
-    // Funcția pentru accesarea camerei
-    function startCamera() {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-            .then(function(stream) {
-                video.srcObject = stream;
-                permissionMessage.style.display = 'none'; // Ascundem mesajul dacă permisiunea este acordată
-                instructions.style.display = 'none'; // Ascundem instrucțiunile dacă permisiunea este acordată
-            })
-            .catch(function(err) {
-                console.log("Eroare la accesarea camerei: " + err);
-                permissionMessage.innerText = "Nu s-a putut accesa camera. Verificați permisiunile.";
-                permissionMessage.style.display = 'block';
-                instructions.style.display = 'block';
-            });
+    <html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capture Photo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
     }
+    #camera {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+      margin: 20px 0;
+    }
+    #canvas {
+      display: none;
+    }
+    #capture-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 16px;
+      margin: 10px 0;
+      cursor: pointer;
+    }
+    #capture-btn:hover {
+      background-color: #45a049;
+    }
+    #captured-image {
+      display: none;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Take a Photo</h1>
+  <video id="camera" autoplay playsinline></video>
+  <button id="capture-btn">Capture</button>
+  <canvas id="canvas"></canvas>
+  <img id="captured-image" alt="Captured Image" />
 
-    // Capturăm imaginea la apăsarea butonului
-    document.getElementById('capture').addEventListener('click', function() {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  <script>
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('capture-btn');
+    const capturedImage = document.getElementById('captured-image');
 
-        var dataURL = canvas.toDataURL('image/png');
-        capturedImage.src = dataURL;
-        capturedImage.style.display = 'block';
+    // Accesarea camerei pentru telefoane mobile
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("Error accessing camera: ", err);
+      });
+
+    // Capturarea imaginii și afișarea acesteia pe pagină
+    captureBtn.addEventListener('click', () => {
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Convertim imaginea în format Data URL și o afișăm pe pagină
+      const imageDataURL = canvas.toDataURL('image/png');
+      capturedImage.src = imageDataURL;
+      capturedImage.style.display = 'block'; // Afișăm imaginea capturată
     });
-    </script>
-
+  </script>
+</body>
+</html>
 """
 
 # Integrarea codului HTML și JavaScript în Streamlit
